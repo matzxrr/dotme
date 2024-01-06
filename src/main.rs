@@ -1,39 +1,33 @@
-use anyhow::{anyhow, Result};
+// Copyright matzxrr
+
+#![deny(warnings, clippy::all)]
+#![forbid(unsafe_code)]
+
 use clap::{Parser, Subcommand};
-use which::which;
 
-fn git_exists() -> Result<bool> {
-    let result = which("git");
-    if result.is_err() {
-        return Err(anyhow!(
-            "Cound not find 'git' on your PATH. Make sure it is installed."
-        ));
-    }
-    Ok(true)
-}
+mod cmd;
+mod config;
 
-#[derive(Parser)]
+#[derive(Debug, Parser)]
+#[command(name = "dotme")]
+#[command(about = "A git based dotfile manager", long_about = None)]
 struct Cli {
     #[command(subcommand)]
-    command: Option<Commands>,
+    command: Commands,
 }
 
-#[derive(Subcommand)]
+#[derive(Debug, Subcommand)]
 enum Commands {
-    Init,
+    #[command(about = "Show the uncommited changes")]
+    Status,
 }
 
-fn main() -> Result<()> {
-    git_exists()?;
+fn main() {
+    let args = Cli::parse();
 
-    let cli = Cli::parse();
-
-    match &cli.command {
-        Some(Commands::Init) => {
-            println!("Calling init");
+    match args.command {
+        Commands::Status => {
+            cmd::status::cmd_status();
         }
-        None => {}
-    }
-
-    Ok(())
+    };
 }
