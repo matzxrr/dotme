@@ -29,11 +29,12 @@ impl ConfigToml {
 #[derive(Debug)]
 pub struct Config {
     pub repo: PathBuf,
+    pub work_tree: PathBuf,
 }
 
 impl Config {
-    pub fn new(repo: PathBuf) -> Self {
-        Self { repo }
+    pub fn new(repo: PathBuf, work_tree: PathBuf) -> Self {
+        Self { repo, work_tree }
     }
 }
 
@@ -51,7 +52,7 @@ impl From<&ConfigToml> for Config {
             value.dotmerepo.location.to_owned()
         };
         let repo = location.join(&value.dotmerepo.name);
-        Config::new(repo)
+        Config::new(repo, base_dirs.home_dir().to_path_buf())
     }
 }
 
