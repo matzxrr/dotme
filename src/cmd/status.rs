@@ -43,7 +43,7 @@ pub fn cmd_status() {
     };
 
     let mut header = false;
-    // Print index changes
+    // Print Staged changes
     for entry in statuses
         .iter()
         .filter(|e| e.status() != git2::Status::CURRENT)
@@ -65,6 +65,38 @@ pub fn cmd_status() {
 
         let old_path = entry.head_to_index().unwrap().old_file().path();
         let new_path = entry.head_to_index().unwrap().new_file().path();
+        match (old_path, new_path) {
+            (Some(old), Some(new)) if old != new => {
+                println!("#\t{}\t{} -> {}", istatus, old.display(), new.display());
+            }
+            (old, new) => {
+                println!("#\t{}\t{}", istatus, old.or(new).unwrap().display());
+            }
+        }
+    }
+    header = false;
+
+    // Print unstaged changes
+    for entry in statuses.iter() {
+        // IDK why this needs to be here, check the example :)
+        if entry.status() == git2::Status::CURRENT || entry.index_to_workdir().is_none() {
+            continue;
+        }
+        let istatus = match entry.status() {
+            s if s.contains(git2::Status::WT_MODIFIED) => "modified: ",
+            s if s.contains(git2::Status::WT_DELETED) => "deleted: ",
+            s if s.contains(git2::Status::WT_RENAMED) => "renamed: ",
+            s if s.contains(git2::Status::WT_TYPECHANGE) => "typechange:",
+            _ => continue,
+        };
+        if !header {
+            println!("#");
+            println!("# Changes not staged for commit:");
+            println!("#");
+            header = true;
+        }
+        let old_path = entry.index_to_workdir().unwrap().old_file().path();
+        let new_path = entry.index_to_workdir().unwrap().new_file().path();
         match (old_path, new_path) {
             (Some(old), Some(new)) if old != new => {
                 println!("#\t{}\t{} -> {}", istatus, old.display(), new.display());
