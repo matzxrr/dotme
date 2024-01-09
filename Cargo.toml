@@ -1,19 +1,13 @@
-[package]
-name = "dotme"
-version = "0.1.0"
+[workspace]
+resolver = "2"
+members = [
+  "dotme-core",
+  "dotme-test"
+]
+
+[workspace.package]
 edition = "2021"
-
-[dependencies]
-anyhow = "1.0.76"
-directories = "5.0.1"
-git2 = "0.18.1"
-serde = "1.0.194"
-serde_derive = "1.0.194"
-toml = "0.8.8"
-which = "5.0.0"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
-[dependencies.clap]
-version = "4.4.11"
-features = ["derive", "env"]
+version = "0.1.0"
+authors = ["matzxrr"]
+description = "A git based dotfile manager"
+documentation = "tbd"
