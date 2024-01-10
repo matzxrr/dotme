@@ -8,8 +8,8 @@ edition.workspace = true
 
 [dependencies]
 anyhow = "1.0.76"
-directories = "5.0.1"
-git2 = "0.18.1"
+directories = { workspace = true }
+git2 = { workspace = true }
 serde = "1.0.194"
 serde_derive = "1.0.194"
 toml = "0.8.8"

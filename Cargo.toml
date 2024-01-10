@@ -11,3 +11,7 @@ version = "0.1.0"
 authors = ["matzxrr"]
 description = "A git based dotfile manager"
 documentation = "tbd"
+
+[workspace.dependencies]
+git2 = "0.18.1"
+directories = "5.0.1"

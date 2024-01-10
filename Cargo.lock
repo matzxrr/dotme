@@ -168,6 +168,10 @@ dependencies = [
 [[package]]
 name = "dotme-test"
 version = "0.1.0"
+dependencies = [
+ "directories",
+ "git2",
+]
 
 [[package]]
 name = "either"
