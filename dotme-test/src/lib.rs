@@ -1,6 +1,6 @@
-use std::{env, fs, path::Path};
+use std::{fs, path::Path};
 
-use git2::Repository;
+use git2::{Repository, RepositoryInitOptions};
 
 pub struct TestRepo(Repository);
 
@@ -8,14 +8,14 @@ impl Drop for TestRepo {
     fn drop(&mut self) {
         let repo_path = self.0.path();
         println!("Destorying {}", repo_path.display());
-        // if let Err(err) = std::fs::remove_dir_all(repo_path) {
-        //     eprintln!("Unable to destory {} - {}", repo_path.display(), err);
-        // };
+        if let Err(err) = std::fs::remove_dir_all(repo_path) {
+            eprintln!("Unable to destory {} - {}", repo_path.display(), err);
+        };
     }
 }
 
 /// Creates a test repository that gets destroyed on `Drop`
-pub fn create_temp_repo() -> TestRepo {
+pub fn create_temp_bare_repo() -> TestRepo {
     let temp_dir = Path::new(".tmp");
     println!("creating dir {}", temp_dir.display());
     if let Err(err) = fs::create_dir_all(temp_dir) {
@@ -25,12 +25,21 @@ pub fn create_temp_repo() -> TestRepo {
             err
         );
     }
-    let name = std::thread::current()
-        .name()
-        .expect("Can't get thread name")
-        .to_owned();
+    let name = match std::thread::current().name() {
+        Some(name) => name.to_owned(),
+        None => {
+            panic!("Can't find thread name");
+        }
+    };
     let temp_git_dir = temp_dir.join(name);
-    match Repository::init_bare(temp_git_dir) {
+    println!("creating temp repo {}", temp_git_dir.display());
+
+    let mut opts = RepositoryInitOptions::new();
+    opts.bare(true);
+    opts.no_dotgit_dir(true);
+    opts.no_reinit(true);
+
+    match Repository::init_opts(temp_git_dir, &opts) {
         Ok(repo) => TestRepo(repo),
         Err(e) => panic!("failed to create temp repo: {}", e),
     }
@@ -41,7 +50,17 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_create_repo() {
-        create_temp_repo();
+    fn creates_a_temp_bare_repo() {
+        create_temp_bare_repo();
+    }
+
+    #[test]
+    fn temp_repo_should_be_destroyed_after_it_goes_out_of_scope() {
+        let name;
+        {
+            let repo = create_temp_bare_repo();
+            name = repo.0.path().to_owned();
+        } // repo goes out of scope here
+        assert!(!name.is_dir());
     }
 }
