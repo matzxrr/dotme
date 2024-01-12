@@ -1,0 +1,20 @@
+[package]
+name = "dotme-cli"
+edition.workspace = true
+version.workspace = true
+authors.workspace = true
+description.workspace = true
+documentation.workspace = true
+default-run = "dotme"
+
+[[bin]]
+name = "dotme"
+path = "src/main.rs"
+
+
+[dependencies]
+dotme-core = { path = "../dotme-core" }
+
+[dependencies.clap]
+version = "4.4.11"
+features = ["derive", "env"]

@@ -4,9 +4,7 @@
 #![forbid(unsafe_code)]
 
 use clap::{Parser, Subcommand};
-
-mod cmd;
-mod config;
+use dotme_core::cmd;
 
 #[derive(Debug, Parser)]
 #[command(name = "dotme")]

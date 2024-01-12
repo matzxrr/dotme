@@ -152,12 +152,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "dotme-cli"
+version = "0.1.0"
+dependencies = [
+ "clap",
+ "dotme-core",
+]
+
+[[package]]
 name = "dotme-core"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "clap",
  "directories",
+ "dotme-test",
  "git2",
  "serde",
  "serde_derive",
