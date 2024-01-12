@@ -3,10 +3,10 @@ use std::process::exit;
 
 use git2::{ErrorCode, Repository, StatusOptions};
 
-use crate::config::{read_config_toml, Config};
+use crate::config::{read_dotme_config, Config};
 
 pub fn cmd_status() {
-    let config_toml = read_config_toml();
+    let config_toml = read_dotme_config();
     let config = Config::from(&config_toml);
     let repo = match Repository::open(&config.repo) {
         Ok(repo) => repo,

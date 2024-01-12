@@ -1,9 +1,5 @@
 use anyhow::Result;
-use std::{
-    fs,
-    path::{Path, PathBuf},
-    process::exit,
-};
+use std::{fs, path::PathBuf, process::exit};
 
 use directories::{BaseDirs, ProjectDirs};
 use serde_derive::Deserialize;
@@ -20,8 +16,8 @@ pub struct DotmeRepo {
 }
 
 impl ConfigToml {
-    pub fn load(path: &Path) -> Result<Self> {
-        let config: Self = toml::from_str(&fs::read_to_string(path)?)?;
+    pub fn load(config_str: &str) -> Result<Self> {
+        let config: Self = toml::from_str(config_str)?;
         Ok(config)
     }
 }
@@ -76,15 +72,10 @@ fn base_dirs() -> BaseDirs {
     }
 }
 
-pub fn read_config_toml() -> ConfigToml {
+pub fn read_dotme_config() -> ConfigToml {
     let dirs = project_dirs();
     let config_base_dir = dirs.config_dir();
-    let config_toml = config_base_dir.join("config.toml");
-    match ConfigToml::load(&config_toml) {
-        Ok(c) => c,
-        Err(e) => {
-            eprintln!("Unable to load config file: '{}'", e);
-            exit(1);
-        }
-    }
+    let config_toml_path = config_base_dir.join("config.toml");
+    let config = fs::read_to_string(config_toml_path).unwrap();
+    ConfigToml::load(&config).unwrap()
 }
