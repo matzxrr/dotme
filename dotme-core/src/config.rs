@@ -79,3 +79,7 @@ pub fn read_dotme_config() -> ConfigToml {
     let config = fs::read_to_string(config_toml_path).unwrap();
     ConfigToml::load(&config).unwrap()
 }
+
+pub fn is_bare_repo() -> bool {
+    true
+}

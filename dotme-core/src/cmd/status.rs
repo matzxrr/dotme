@@ -17,6 +17,11 @@ pub fn cmd_status() {
         }
     };
 
+    if !repo.is_bare() {
+        eprintln!("Dotme requires a bare repo");
+        exit(1);
+    }
+
     if repo.set_workdir(&config.work_tree, false).is_err() {
         eprintln!("Nope, cant setup work tree");
         exit(1);
