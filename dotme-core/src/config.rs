@@ -1,19 +1,62 @@
-use std::{fmt::Display, path::PathBuf};
-
 use directories::{BaseDirs, ProjectDirs};
 use serde_derive::Deserialize;
+use std::io::Error as IoError;
+use std::{fmt::Display, fs, path::PathBuf};
+use toml::de::Error as TomlError;
+
+#[derive(Debug)]
+pub enum ConfigLoadError {
+    DirectoryError(&'static str),
+    IoError(IoError),
+    DeserializeError(TomlError),
+}
+
+impl From<IoError> for ConfigLoadError {
+    fn from(value: IoError) -> Self {
+        ConfigLoadError::IoError(value)
+    }
+}
+
+impl From<TomlError> for ConfigLoadError {
+    fn from(value: TomlError) -> Self {
+        ConfigLoadError::DeserializeError(value)
+    }
+}
+
+impl Display for ConfigLoadError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ConfigLoadError::DirectoryError(e) => write!(f, "Directory error: {}", e),
+            ConfigLoadError::IoError(e) => write!(f, "IO Error: {}", e),
+            ConfigLoadError::DeserializeError(e) => write!(f, "Deserialize Error: {}", e),
+        }
+    }
+}
+
+impl std::error::Error for ConfigLoadError {}
+
+type Result<T> = std::result::Result<T, ConfigLoadError>;
 
 #[derive(Debug, Deserialize)]
-#[serde(rename_all = "snake_case")]
-pub struct ConfigRaw {
+#[serde(rename_all = "kebab-case")]
+#[serde(deny_unknown_fields)]
+pub struct RawConfig {
     pub dotme_repo: DotmeRepo,
 }
 
 #[derive(Debug, Deserialize)]
-#[serde(rename_all = "snake_case")]
+#[serde(rename_all = "kebab-case")]
+#[serde(deny_unknown_fields)]
 pub struct DotmeRepo {
     pub name: String,
     pub location: String,
+}
+
+impl RawConfig {
+    pub fn load(config_string: &str) -> Result<RawConfig> {
+        let raw_config: RawConfig = toml::from_str(config_string)?;
+        Ok(raw_config)
+    }
 }
 
 #[derive(Debug)]
@@ -28,50 +71,6 @@ impl Config {
     }
 }
 
-impl Default for Config {
-    fn default() -> Config {
-        Config {
-            repo: PathBuf::from(".cfg"),
-            work_tree: PathBuf::new(),
-        }
-    }
-}
-
-#[derive(Debug)]
-pub enum ConfigLoadError {
-    DirectoryError(&'static str),
-}
-
-impl Display for ConfigLoadError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            ConfigLoadError::DirectoryError(e) => write!(f, "Directory error: {}", e),
-        }
-    }
-}
-
-impl std::error::Error for ConfigLoadError {}
-
-type Result<T> = std::result::Result<T, ConfigLoadError>;
-
-// impl From<&ConfigToml> for Config {
-//     fn from(value: &ConfigToml) -> Self {
-//         let base_dirs = base_dirs();
-//         let location = if value
-//             .dotmerepo
-//             .location
-//             .to_str()
-//             .is_some_and(|s| s.to_ascii_lowercase() == "home")
-//         {
-//             base_dirs.home_dir().to_path_buf()
-//         } else {
-//             value.dotmerepo.location.to_owned()
-//         };
-//         let repo = location.join(&value.dotmerepo.name);
-//         Config::new(repo, base_dirs.home_dir().to_path_buf())
-//     }
-// }
-
 fn project_dirs() -> Result<ProjectDirs> {
     ProjectDirs::from("", "", "dotme").ok_or(ConfigLoadError::DirectoryError(
         "Cannot get project directories",
@@ -84,34 +83,21 @@ fn base_dirs() -> Result<BaseDirs> {
     ))
 }
 
-// pub fn read_dotme_config() -> ConfigToml {
-//     let dirs = project_dirs();
-//     let config_base_dir = dirs.config_dir();
-//     let config_toml_path = config_base_dir.join("config.toml");
-//     let config = fs::read_to_string(config_toml_path).unwrap();
-//     ConfigToml::load(&config).unwrap()
-// }
-
-impl Config {
-    /// Loads a config based on the input string
-    pub fn load() -> Config {
-        Config::default()
-    }
-    /// Loades the default config
-    pub fn load_default() -> Config {
-        Config::default()
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_erors() {
-        let dirs = project_dirs();
-        if let Err(e) = dirs {
-            println!("{:?}", e);
-        }
-    }
+/// Loads the dotme config
+/// Linux Path: ~/.config/dotme/config.toml
+pub fn load_dotme_config() -> Result<Config> {
+    let project_dirs = project_dirs()?;
+    let config_base_dir = project_dirs.config_dir();
+    let config_toml_path = config_base_dir.join("config.toml");
+    let config_string = fs::read_to_string(config_toml_path)?;
+    let raw_config = RawConfig::load(&config_string)?;
+    let base_dirs = base_dirs()?;
+    let location = if raw_config.dotme_repo.location.to_ascii_lowercase() == "home" {
+        base_dirs.home_dir().to_path_buf()
+    } else {
+        PathBuf::from(raw_config.dotme_repo.location)
+    };
+    let repo = location.join(&raw_config.dotme_repo.name);
+    let work_tree = base_dirs.home_dir().to_path_buf();
+    Ok(Config::new(repo, work_tree))
 }
