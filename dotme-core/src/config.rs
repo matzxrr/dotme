@@ -69,6 +69,18 @@ impl Config {
     pub fn new(repo: PathBuf, work_tree: PathBuf) -> Self {
         Self { repo, work_tree }
     }
+    pub fn load(config_string: &str) -> Result<Config> {
+        let raw_config = RawConfig::load(config_string)?;
+        let base_dirs = base_dirs()?;
+        let location = if raw_config.dotme_repo.location.to_ascii_lowercase() == "home" {
+            base_dirs.home_dir().to_path_buf()
+        } else {
+            PathBuf::from(raw_config.dotme_repo.location)
+        };
+        let repo = location.join(&raw_config.dotme_repo.name);
+        let work_tree = base_dirs.home_dir().to_path_buf();
+        Ok(Config::new(repo, work_tree))
+    }
 }
 
 fn project_dirs() -> Result<ProjectDirs> {
@@ -90,14 +102,5 @@ pub fn load_dotme_config() -> Result<Config> {
     let config_base_dir = project_dirs.config_dir();
     let config_toml_path = config_base_dir.join("config.toml");
     let config_string = fs::read_to_string(config_toml_path)?;
-    let raw_config = RawConfig::load(&config_string)?;
-    let base_dirs = base_dirs()?;
-    let location = if raw_config.dotme_repo.location.to_ascii_lowercase() == "home" {
-        base_dirs.home_dir().to_path_buf()
-    } else {
-        PathBuf::from(raw_config.dotme_repo.location)
-    };
-    let repo = location.join(&raw_config.dotme_repo.name);
-    let work_tree = base_dirs.home_dir().to_path_buf();
-    Ok(Config::new(repo, work_tree))
+    Config::load(&config_string)
 }
