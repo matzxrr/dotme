@@ -1,3 +1,9 @@
+# This config file holds all the default configuration options.
+# Currently all of the options need to be defined in your enviornment.
+#
+# In the future, I would like this to act as the default and merge with their
+# config.
+
 [dotme-repo]
 name = ".cfg"
 location = "HOME"
