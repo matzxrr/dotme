@@ -16,3 +16,4 @@ documentation = "tbd"
 [workspace.dependencies]
 git2 = "0.18.1"
 directories = "5.0.1"
+thiserror = "1.0"

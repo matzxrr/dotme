@@ -40,16 +40,16 @@ type Result<T> = std::result::Result<T, ConfigLoadError>;
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 #[serde(deny_unknown_fields)]
-pub struct RawConfig {
-    pub dotme_repo: DotmeRepo,
+struct RawConfig {
+    dotme_repo: DotmeRepo,
 }
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 #[serde(deny_unknown_fields)]
-pub struct DotmeRepo {
-    pub name: String,
-    pub location: String,
+struct DotmeRepo {
+    name: String,
+    location: String,
 }
 
 impl RawConfig {
@@ -66,10 +66,10 @@ pub struct Config {
 }
 
 impl Config {
-    pub fn new(repo: PathBuf, work_tree: PathBuf) -> Self {
+    fn new(repo: PathBuf, work_tree: PathBuf) -> Self {
         Self { repo, work_tree }
     }
-    pub fn load(config_string: &str) -> Result<Config> {
+    fn load(config_string: &str) -> Result<Config> {
         let raw_config = RawConfig::load(config_string)?;
         let base_dirs = base_dirs()?;
         let location = if raw_config.dotme_repo.location.to_ascii_lowercase() == "home" {
@@ -103,4 +103,15 @@ pub fn load_dotme_config() -> Result<Config> {
     let config_toml_path = config_base_dir.join("config.toml");
     let config_string = fs::read_to_string(config_toml_path)?;
     Config::load(&config_string)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn it_should_parse_config() {
+        let test_config = include_str!("../config.toml");
+        Config::load(test_config).unwrap();
+    }
 }

@@ -1,33 +1,19 @@
-use anyhow::Result;
 use std::process::exit;
 
-use git2::{ErrorCode, Repository, StatusOptions};
+use git2::StatusOptions;
 
-use crate::config::load_dotme_config;
+use crate::repo::Repo;
 
 pub fn cmd_status() {
-    let config = match load_dotme_config() {
-        Ok(config) => config,
-        Err(e) => {
-            eprintln!("{}", e);
-            exit(1);
-        }
-    };
-    let repo = match Repository::open(&config.repo) {
+    let mut repo = match Repo::load() {
         Ok(repo) => repo,
-        Err(e) => {
-            eprintln!("Unable to load repo '{}'", config.repo.display());
-            eprintln!("{}", e);
+        Err(err) => {
+            eprintln!("ecountered error: {}", err);
             exit(1);
         }
     };
 
-    if !repo.is_bare() {
-        eprintln!("Dotme requires a bare repo");
-        exit(1);
-    }
-
-    if repo.set_workdir(&config.work_tree, false).is_err() {
+    if repo.repo.set_workdir(&config.work_tree, false).is_err() {
         eprintln!("Nope, cant setup work tree");
         exit(1);
     }
@@ -116,9 +102,10 @@ pub fn cmd_status() {
             }
         }
     }
+    Ok(())
 }
 
-fn show_branch(repo: &Repository) -> Result<(), git2::Error> {
+fn show_branch(repo: &Repository) -> Result<()> {
     let head = match repo.head() {
         Ok(head) => Some(head),
         Err(ref e) if e.code() == ErrorCode::UnbornBranch || e.code() == ErrorCode::NotFound => {
