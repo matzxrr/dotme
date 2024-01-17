@@ -1,5 +1,6 @@
 use crate::config::{load_dotme_config, Config};
-use git2::Repository;
+use git2::Error as Git2Error;
+use git2::{ErrorCode, Repository};
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -9,7 +10,11 @@ pub enum RepoError {
     #[error("loading config.toml file: {0}")]
     ConfigLoadError(#[from] crate::config::ConfigLoadError),
     #[error("git2: {0}")]
-    Git2Error(#[from] git2::Error),
+    Git2Error(#[from] Git2Error),
+    #[error("unknown branch")]
+    UnknownBranch,
+    #[error("branch name is not valid utf-8")]
+    BranchNotUtf8,
 }
 
 type Result<T> = std::result::Result<T, RepoError>;
@@ -19,11 +24,7 @@ type Result<T> = std::result::Result<T, RepoError>;
 ///
 /// Does some basic validation of the repo's config settings on `load()`.
 ///
-/// ```
-/// let repo = Repo::load().unwrap();
-/// let r = repo.repo;   // <- git2::Repository
-/// let c = repo.config; // <- crate::config::Config
-/// ```
+/// Has some helper functions
 pub struct Repo {
     pub repo: Repository,
     pub config: Config,
@@ -46,5 +47,26 @@ impl Repo {
         } else {
             Ok(())
         }
+    }
+
+    pub fn set_worktree(&mut self) -> Result<()> {
+        self.repo
+            .set_workdir(&self.config.work_tree, false)
+            .map_err(RepoError::Git2Error)
+    }
+
+    pub fn get_branch_name(&self) -> Result<String> {
+        let head = match self.repo.head() {
+            Ok(head) => head,
+            Err(ref e)
+                if e.code() == ErrorCode::UnbornBranch || e.code() == ErrorCode::NotFound =>
+            {
+                return Err(RepoError::UnknownBranch);
+            }
+            Err(e) => return Err(RepoError::Git2Error(e)),
+        };
+        head.shorthand()
+            .map(|x| x.to_owned())
+            .ok_or_else(|| RepoError::BranchNotUtf8)
     }
 }

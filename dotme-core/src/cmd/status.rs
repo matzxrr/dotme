@@ -13,24 +13,27 @@ pub fn cmd_status() {
         }
     };
 
-    if repo.repo.set_workdir(&config.work_tree, false).is_err() {
-        eprintln!("Nope, cant setup work tree");
+    if let Err(err) = repo.set_worktree() {
+        eprintln!("encountered error: {}", err);
         exit(1);
     }
 
-    if show_branch(&repo).is_err() {
-        eprintln!("Unable to read current branch");
-        exit(1);
+    match repo.get_branch_name() {
+        Ok(branch_name) => println!("# branch: {}", branch_name),
+        Err(err) => {
+            eprintln!("encountered error: {}", err);
+            exit(1);
+        }
     }
 
     // https://github.com/rust-lang/git2-rs/blob/master/examples/status.rs
     // Example ^^
-    println!("# repo: {:?}", repo.path());
+    println!("# repo: {:?}", repo.repo.path());
 
     let mut opts = StatusOptions::new();
     opts.include_untracked(false);
 
-    let statuses = match repo.statuses(Some(&mut opts)) {
+    let statuses = match repo.repo.statuses(Some(&mut opts)) {
         Ok(statuses) => statuses,
         Err(e) => {
             eprintln!("{}", e);
@@ -102,21 +105,4 @@ pub fn cmd_status() {
             }
         }
     }
-    Ok(())
-}
-
-fn show_branch(repo: &Repository) -> Result<()> {
-    let head = match repo.head() {
-        Ok(head) => Some(head),
-        Err(ref e) if e.code() == ErrorCode::UnbornBranch || e.code() == ErrorCode::NotFound => {
-            None
-        }
-        Err(e) => return Err(e),
-    };
-    let head = head.as_ref().and_then(|h| h.shorthand());
-    println!(
-        "# branch: {}",
-        head.unwrap_or("Not currently on any branch")
-    );
-    Ok(())
 }
