@@ -19,7 +19,7 @@ pub fn cmd_status() {
     }
 
     match repo.get_branch_name() {
-        Ok(branch_name) => println!("# branch: {}", branch_name),
+        Ok(branch_name) => println!("On branch {}", branch_name),
         Err(err) => {
             eprintln!("encountered error: {}", err);
             exit(1);
