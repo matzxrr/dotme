@@ -3,6 +3,8 @@
 #![deny(warnings, clippy::all)]
 #![forbid(unsafe_code)]
 
+mod dotme_panic;
+
 use clap::{Parser, Subcommand};
 use dotme_core::cmd;
 
@@ -21,11 +23,14 @@ enum Commands {
 }
 
 fn main() {
+    dotme_panic::setup();
     let args = Cli::parse();
-
     match args.command {
         Commands::Status => {
             cmd::status::cmd_status();
+            if true {
+                panic!("what??");
+            }
         }
     };
 }
