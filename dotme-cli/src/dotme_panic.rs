@@ -7,8 +7,20 @@ pub fn setup() {
     }));
 }
 
-fn handle_dump(panic_info: &PanicInfo) -> String {
-    let mut out = String::new();
+#[derive(Debug)]
+struct DumpData {
+    origin: String,
+    cause: String,
+}
+
+impl std::fmt::Display for DumpData {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "\n\norigin: {}\ncause: {}\n", self.origin, self.cause)
+    }
+}
+
+fn handle_dump(panic_info: &PanicInfo) -> DumpData {
+    let mut origin = String::new();
     let message = match (
         panic_info.payload().downcast_ref::<&str>(),
         panic_info.payload().downcast_ref::<String>(),
@@ -21,16 +33,15 @@ fn handle_dump(panic_info: &PanicInfo) -> String {
         Some(m) => m,
         None => "Unknown".into(),
     };
-    eprintln!("{}", cause);
     match panic_info.location() {
-        Some(location) => out.push_str(&format!(
-            "Panic occurred in file '{}' at line {}\n",
+        Some(location) => origin.push_str(&format!(
+            "Panic occurred in file '{}' at line {}",
             location.file(),
             location.line(),
         )),
-        None => out.push_str("Panic location unknown.\n"),
+        None => origin.push_str("Panic location unknown."),
     };
-    out
+    DumpData { origin, cause }
 }
 
 pub enum PanicStyle {
