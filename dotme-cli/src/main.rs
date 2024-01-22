@@ -6,11 +6,10 @@
 mod dotme_panic;
 
 use clap::{Parser, Subcommand};
-use dotme_core::cmd;
 
 #[derive(Debug, Parser)]
 #[command(name = "dotme")]
-#[command(about = "A git based dotfile manager", long_about = None)]
+#[command(about = "Dotfile management through a bare repo.", long_about = None)]
 struct Cli {
     #[command(subcommand)]
     command: Commands,
@@ -18,19 +17,26 @@ struct Cli {
 
 #[derive(Debug, Subcommand)]
 enum Commands {
-    #[command(about = "Show the uncommited changes")]
-    Status,
+    #[command(about = "Setup new dotfile repo")]
+    Init,
+    #[command(about = "Install your dotfiles on a system")]
+    Clone,
+    #[command(about = "Add 'config' command to your PATH")]
+    Config,
 }
 
 fn main() {
     dotme_panic::setup();
     let args = Cli::parse();
     match args.command {
-        Commands::Status => {
-            cmd::status::cmd_status();
-            if true {
-                panic!("what??");
-            }
+        Commands::Init => {
+            println!("Setup a new dotfile repo");
+        }
+        Commands::Clone => {
+            println!("Install your dotfiles on a system")
+        }
+        Commands::Config => {
+            println!("Add 'config' command to your PATH")
         }
     };
 }
