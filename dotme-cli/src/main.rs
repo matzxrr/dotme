@@ -18,7 +18,7 @@ struct Cli {
 
 #[derive(Debug, Subcommand)]
 enum Commands {
-    #[command(about = "Setup new dotfile repo")]
+    #[command(about = "Setup a new dotfile repo")]
     Init,
     #[command(about = "Clone and install your dotfiles")]
     Clone,
@@ -33,7 +33,7 @@ fn main() {
     let args = Cli::parse();
     match args.command {
         Commands::Init => {
-            init::init();
+            let _ = init::init();
         }
         Commands::Clone => {
             todo!()
