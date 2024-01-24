@@ -2,7 +2,7 @@ use std::time::Duration;
 use std::{path::PathBuf, thread};
 use thiserror::Error;
 
-use dialoguer::{theme::ColorfulTheme, Confirm, Error as DialoguerError, Input};
+use dialoguer::{theme::ColorfulTheme, Error as DialoguerError, Input};
 
 use console::Term;
 
