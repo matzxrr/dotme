@@ -6,6 +6,8 @@ use dialoguer::{theme::ColorfulTheme, Input};
 
 use console::Term;
 
+use crate::path_utils::{base_dirs, verify_bash_path};
+
 pub fn init() -> Result<(), Box<dyn Error>> {
     let term = Term::stdout();
     term.write_line("\n\nSetting up a new dotfile repo\n")?;
@@ -22,6 +24,17 @@ pub fn init() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-fn validate_repo_location(input: &String) -> Result<(), &str> {
+fn validate_repo_location<'a>(input: &String) -> Result<(), &'a str> {
+    if input.starts_with("~") {
+        verify_bash_path(input);
+    }
+
     Ok(())
+}
+
+fn get_default_path() -> Result<String, Box<dyn Error>> {
+    let base_dirs = base_dirs()?;
+    let mut path = base_dirs.home_dir().to_path_buf();
+    path.join(".cfg");
+    path.to_str()
 }
