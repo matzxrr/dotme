@@ -20,6 +20,3 @@ pub fn base_dirs() -> Result<BaseDirs> {
         "Cannot get base directories",
     ))
 }
-pub fn verify_bash_path(input: &str) -> Option<()> {
-    Some(())
-}
