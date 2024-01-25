@@ -1,4 +1,7 @@
+use std::path::Path;
+
 use crate::config::{load_dotme_config, Config};
+use crate::path_utils::{self, PathUtilsError};
 use git2::Error as Git2Error;
 use git2::{ErrorCode, Repository};
 use thiserror::Error;
@@ -15,6 +18,8 @@ pub enum RepoError {
     UnknownBranch,
     #[error("branch name is not valid utf-8")]
     BranchNotUtf8,
+    #[error("path error: {0}")]
+    PathUtilError(#[from] PathUtilsError),
 }
 
 type Result<T> = std::result::Result<T, RepoError>;
@@ -68,5 +73,13 @@ impl Repo {
         head.shorthand()
             .map(|x| x.to_owned())
             .ok_or_else(|| RepoError::BranchNotUtf8)
+    }
+
+    pub fn create_bare_repo(path: &Path) -> Result<Repo> {
+        let base_dirs = path_utils::base_dirs()?;
+        let workspace_path = base_dirs.home_dir();
+        let config = Config::new(path.to_path_buf(), workspace_path.to_path_buf());
+        let repo = Repository::init_bare(path)?;
+        Ok(Repo { repo, config })
     }
 }

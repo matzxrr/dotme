@@ -1,14 +1,16 @@
-use directories::{BaseDirs, ProjectDirs};
 use serde_derive::Deserialize;
 use std::io::Error as IoError;
 use std::{fmt::Display, fs, path::PathBuf};
 use toml::de::Error as TomlError;
+
+use crate::path_utils::{base_dirs, project_dirs, PathUtilsError};
 
 #[derive(Debug)]
 pub enum ConfigLoadError {
     DirectoryError(&'static str),
     IoError(IoError),
     DeserializeError(TomlError),
+    PathUtilsError(PathUtilsError),
 }
 
 impl From<IoError> for ConfigLoadError {
@@ -23,12 +25,19 @@ impl From<TomlError> for ConfigLoadError {
     }
 }
 
+impl From<PathUtilsError> for ConfigLoadError {
+    fn from(value: PathUtilsError) -> Self {
+        ConfigLoadError::PathUtilsError(value)
+    }
+}
+
 impl Display for ConfigLoadError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             ConfigLoadError::DirectoryError(e) => write!(f, "Directory error: {}", e),
             ConfigLoadError::IoError(e) => write!(f, "IO Error: {}", e),
             ConfigLoadError::DeserializeError(e) => write!(f, "Deserialize Error: {}", e),
+            ConfigLoadError::PathUtilsError(e) => write!(f, "Path Util Error: {}", e),
         }
     }
 }
@@ -66,7 +75,7 @@ pub struct Config {
 }
 
 impl Config {
-    fn new(repo: PathBuf, work_tree: PathBuf) -> Self {
+    pub fn new(repo: PathBuf, work_tree: PathBuf) -> Self {
         Self { repo, work_tree }
     }
     fn load(config_string: &str) -> Result<Config> {
@@ -81,18 +90,6 @@ impl Config {
         let work_tree = base_dirs.home_dir().to_path_buf();
         Ok(Config::new(repo, work_tree))
     }
-}
-
-fn project_dirs() -> Result<ProjectDirs> {
-    ProjectDirs::from("", "", "dotme").ok_or(ConfigLoadError::DirectoryError(
-        "Cannot get project directories",
-    ))
-}
-
-fn base_dirs() -> Result<BaseDirs> {
-    BaseDirs::new().ok_or(ConfigLoadError::DirectoryError(
-        "Cannot get base directories",
-    ))
 }
 
 /// Loads the dotme config
