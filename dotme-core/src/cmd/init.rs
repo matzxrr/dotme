@@ -5,7 +5,7 @@ use dialoguer::{theme::ColorfulTheme, Error as DialoguerError, Input};
 
 use console::Term;
 
-use crate::path_utils::{add_to_bashrc, base_dirs};
+use crate::path_utils::{add_to_bashrc, base_dirs, PathUtilsError};
 use crate::repo::{Repo, RepoError};
 
 #[derive(Debug, Error)]
@@ -18,6 +18,8 @@ pub enum InitError {
     DialoguerError(#[from] DialoguerError),
     #[error("Repo Error: {0}")]
     RepoError(#[from] RepoError),
+    #[error("Path Utils: {0}")]
+    PathUtilsError(#[from] PathUtilsError),
 }
 
 type Result<T> = std::result::Result<T, InitError>;
@@ -44,16 +46,13 @@ pub fn init() -> Result<()> {
         "\nCreating bare git repository at '{}'",
         repo_location_path.display()
     ))?;
-    let repo = Repo::create_bare_repo(repo_location_path.as_path())?;
+    let repo = Repo::create_bare_repo(&repo_location_path)?;
     term.write_line(&format!(
         "Bare repostiory created at {}",
         repo.repo.path().display()
     ))?;
 
-    add_to_bashrc(repo.repo.path()).unwrap();
-
-    let repo_config = repo.repo.config().unwrap();
-    repo_config.get_bool("showUntrackedFiles").expect("exists");
+    add_to_bashrc(repo.repo.path())?;
 
     Ok(())
 }
@@ -65,18 +64,4 @@ fn get_default_path() -> Result<String> {
     path.to_str()
         .ok_or(InitError::DefaultPathError)
         .map(ToString::to_string)
-}
-
-#[cfg(test)]
-mod test_init {
-    use git2::Repository;
-
-    use super::*;
-
-    #[test]
-    fn test_init_repo() {
-        let repo = Repository::open("/home/magreenberg/.test").unwrap();
-        let config = repo.config().unwrap();
-        let _val = config.get_string("GIT_SUBMODULE_IGNORE_UNTRACKED").unwrap();
-    }
 }

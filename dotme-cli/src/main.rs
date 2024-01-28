@@ -33,7 +33,10 @@ fn main() {
     let args = Cli::parse();
     match args.command {
         Commands::Init => {
-            let _ = init::init();
+            match init::init() {
+                Ok(()) => println!("Init Complete!"),
+                Err(err) => println!("{}", err),
+            };
         }
         Commands::Clone => {
             todo!()

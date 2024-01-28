@@ -34,24 +34,13 @@ Reading bash file
 basename $(readlink /proc/$$/exe)
 ps -o comm= -p $$
 ## My Aliases
-alias config='/usr/bin/git --git-dir=$HOME/.cfg/ --work-tree=$HOME'
-    let mut file = OpenOptions::new()
-        .write(true)
-        .append(true)
-        .open("my-file")
-        .unwrap();
-
-    if let Err(e) = writeln!(file, "A new line!") {
-        eprintln!("Couldn't write to file: {}", e);
-    }
 */
 pub fn add_to_bashrc(path: &Path) -> Result<()> {
     let base_dirs = base_dirs()?;
     let home_dirs = base_dirs.home_dir();
     let bashrc = home_dirs.join(".bashrc");
-    let _ = home_dirs.join(".");
     let alias = format!(
-        r"alias config='/usr/bin/git --git-dir={} --work-tree=$HOME'",
+        "alias config='/usr/bin/git --git-dir={} --work-tree=$HOME'\n",
         path.display()
     );
 

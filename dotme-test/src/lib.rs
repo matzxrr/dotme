@@ -1,8 +1,24 @@
 use std::{fs, path::Path};
 
 use git2::{Repository, RepositoryInitOptions};
+use thiserror::Error;
 
-pub struct TestRepo(Repository);
+#[derive(Debug, Error)]
+pub enum TestRepoError {
+    #[error("Repo error")]
+    RepoError,
+}
+
+type Result<T> = std::result::Result<T, TestRepoError>;
+
+pub struct TestRepo(pub Repository);
+
+impl TestRepo {
+    pub fn clone_repo(&self) -> Result<Repository> {
+        let path = self.0.path();
+        Repository::open_bare(path).map_err(|_| TestRepoError::RepoError)
+    }
+}
 
 impl Drop for TestRepo {
     fn drop(&mut self) {
