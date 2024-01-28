@@ -1,9 +1,4 @@
-use std::{
-    fs::{self, OpenOptions},
-    io::{self, BufReader, Write},
-    path::Path,
-    process::Command,
-};
+use std::{fs::OpenOptions, io::Write, path::Path};
 
 use directories::{BaseDirs, ProjectDirs};
 use thiserror::Error;

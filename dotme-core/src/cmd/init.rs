@@ -1,4 +1,3 @@
-use dialoguer::Confirm;
 use std::path::PathBuf;
 use thiserror::Error;
 
