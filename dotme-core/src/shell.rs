@@ -17,6 +17,10 @@ pub struct ShellConfig {
 }
 
 impl ShellConfig {
+    /// This should load the users shell information
+    /// Currently only works if the SHELL env variable is set
+    ///
+    /// TODO: Need to find fallback ways of checking a users shell
     pub fn load() -> Result<ShellConfig> {
         let shell_result = env::var("SHELL");
         if let Ok(shell_path) = shell_result {
@@ -63,5 +67,14 @@ mod shell_tests {
         assert_eq!(&shell.shell, "bash");
         assert_eq!(&shell.file, ".bashrc");
         assert_eq!(&shell.path, "/bin/bash");
+    }
+
+    #[test]
+    fn test_something() {
+        if let Ok(exe_path) = env::current_exe() {
+            if let Some(parent) = exe_path.parent() {
+                println!("{}", parent.display());
+            }
+        }
     }
 }
