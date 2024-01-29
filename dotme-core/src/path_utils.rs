@@ -3,10 +3,14 @@ use std::{fs::OpenOptions, io::Write, path::Path};
 use directories::{BaseDirs, ProjectDirs};
 use thiserror::Error;
 
+use crate::shell::{ShellConfig, ShellError};
+
 #[derive(Debug, Error)]
 pub enum PathUtilsError {
     #[error("Dirs Error: {0}")]
     DirectoriesError(&'static str),
+    #[error("Shell Error: {0}")]
+    ShellError(#[from] ShellError),
 }
 
 type Result<T> = std::result::Result<T, PathUtilsError>;
@@ -23,31 +27,21 @@ pub fn base_dirs() -> Result<BaseDirs> {
     ))
 }
 
-/*
-Command::new("sh")
-        .arg("-c")
-        .arg("echo hello")
-        .output()
-        .expect("failed to execute process")
-
-Reading bash file
-basename $(readlink /proc/$$/exe)
-ps -o comm= -p $$
-## My Aliases
-*/
-pub fn add_to_bashrc(path: &Path) -> Result<()> {
-    let base_dirs = base_dirs()?;
-    let home_dirs = base_dirs.home_dir();
-    let bashrc = home_dirs.join(".bashrc");
+pub fn add_config_cmd_to_shell_file(path: &Path) -> Result<()> {
+    let shell_config = ShellConfig::load()?;
     let alias = format!(
         "alias config='/usr/bin/git --git-dir={} --work-tree=$HOME'\n",
         path.display()
     );
 
+    let base_dirs = base_dirs()?;
+    let home = base_dirs.home_dir();
+    let shell_config_file = home.join(shell_config.file);
+
     let mut file = OpenOptions::new()
         .write(true)
         .append(true)
-        .open(bashrc)
+        .open(shell_config_file)
         .unwrap();
 
     file.write_all(alias.as_bytes()).unwrap();
@@ -64,6 +58,6 @@ mod test_path_utils {
     #[test]
     fn test_add() {
         let path = PathBuf::from("/home/magreenberg/.test");
-        add_to_bashrc(path.as_path()).unwrap();
+        add_config_cmd_to_shell_file(path.as_path()).unwrap();
     }
 }

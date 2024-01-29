@@ -5,7 +5,7 @@ use dialoguer::{theme::ColorfulTheme, Error as DialoguerError, Input};
 
 use console::Term;
 
-use crate::path_utils::{add_to_bashrc, base_dirs, PathUtilsError};
+use crate::path_utils::{add_config_cmd_to_shell_file, base_dirs, PathUtilsError};
 use crate::repo::{Repo, RepoError};
 
 #[derive(Debug, Error)]
@@ -52,7 +52,9 @@ pub fn init() -> Result<()> {
         repo.repo.path().display()
     ))?;
 
-    add_to_bashrc(repo.repo.path())?;
+    term.write_line("Writing 'config' command to your shell file")?;
+    add_config_cmd_to_shell_file(repo.repo.path())?;
+    term.write_line("Added 'config' command to your shell")?;
 
     Ok(())
 }
