@@ -5,6 +5,8 @@ use thiserror::Error;
 pub enum ShellError {
     #[error("Can't find the users shell, might not be supported")]
     CannotFindShell,
+    #[error("Unknown shell '{0}'")]
+    UnknownShell(String),
 }
 
 type Result<T> = std::result::Result<T, ShellError>;
@@ -41,7 +43,7 @@ fn try_parse_shell(shell_path: &str) -> Result<ShellConfig> {
             });
         }
     }
-    Err(ShellError::CannotFindShell)
+    Err(ShellError::UnknownShell(shell_path.to_owned()))
 }
 
 fn match_shell_to_config_file(shell: &str) -> Option<String> {
@@ -84,7 +86,8 @@ mod try_parse_shell_tests {
     }
     #[test]
     fn it_shouldnt_load_unknown_shell() {
-        let shell = try_parse_shell("/usr/bin/unknown");
-        assert_eq!(shell, Err(ShellError::CannotFindShell));
+        let shell_path = String::from("/usr/bin/unknown");
+        let shell = try_parse_shell(&shell_path);
+        assert_eq!(shell, Err(ShellError::UnknownShell(shell_path)));
     }
 }

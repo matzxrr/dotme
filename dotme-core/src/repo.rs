@@ -9,8 +9,6 @@ use thiserror::Error;
 pub enum RepoError {
     #[error("repoistory config is invalid: {0}")]
     InvalidRepoConfig(String),
-    #[error("loading config.toml file: {0}")]
-    ConfigLoadError(#[from] crate::config::ConfigLoadError),
     #[error("git2: {0}")]
     Git2Error(#[from] Git2Error),
     #[error("unknown branch")]
