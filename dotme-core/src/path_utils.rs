@@ -1,16 +1,12 @@
-use std::{fs::OpenOptions, io::Write, path::Path};
+use std::{fmt::Display, path::PathBuf};
 
 use directories::{BaseDirs, ProjectDirs};
 use thiserror::Error;
-
-use crate::shell::{ShellConfig, ShellError};
 
 #[derive(Debug, Error)]
 pub enum PathUtilsError {
     #[error("Dirs Error: {0}")]
     DirectoriesError(&'static str),
-    #[error("Shell Error: {0}")]
-    ShellError(#[from] ShellError),
 }
 
 type Result<T> = std::result::Result<T, PathUtilsError>;
@@ -27,37 +23,25 @@ pub fn base_dirs() -> Result<BaseDirs> {
     ))
 }
 
-pub fn add_config_cmd_to_shell_file(path: &Path) -> Result<()> {
-    let shell_config = ShellConfig::load()?;
-    let alias = format!(
-        "alias config='/usr/bin/git --git-dir={} --work-tree=$HOME'\n",
-        path.display()
-    );
-
-    let base_dirs = base_dirs()?;
-    let home = base_dirs.home_dir();
-    let shell_config_file = home.join(shell_config.file);
-
-    let mut file = OpenOptions::new()
-        .write(true)
-        .append(true)
-        .open(shell_config_file)
-        .unwrap();
-
-    file.write_all(alias.as_bytes()).unwrap();
-
-    Ok(())
+pub struct RepoPathLocation {
+    is_absolute: bool,
+    path: PathBuf,
 }
 
-#[cfg(test)]
-mod test_path_utils {
-    use std::path::PathBuf;
+impl Display for RepoPathLocation {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self.is_absolute {
+            true => write!(f, "{}", self.path.display()),
+            false => write!(f, "$HOME/{}", self.path.display()),
+        }
+    }
+}
 
-    use super::*;
-
-    #[test]
-    fn test_add() {
-        let path = PathBuf::from("/home/magreenberg/.test");
-        add_config_cmd_to_shell_file(path.as_path()).unwrap();
+impl Default for RepoPathLocation {
+    fn default() -> Self {
+        Self {
+            is_absolute: false,
+            path: PathBuf::from(".cfg"),
+        }
     }
 }
