@@ -9,7 +9,7 @@ edition.workspace = true
 [dependencies]
 directories = { workspace = true }
 git2 = { workspace = true }
-thiserror = { workspace = true }
+anyhow = { workspace = true }
 serde = "1.0.194"
 serde_derive = "1.0.194"
 toml = "0.8.8"

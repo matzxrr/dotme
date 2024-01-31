@@ -1,47 +1,23 @@
-use std::{fmt::Display, path::PathBuf};
+use std::path::{Path, PathBuf};
 
+use anyhow::{anyhow, Result};
 use directories::{BaseDirs, ProjectDirs};
-use thiserror::Error;
-
-#[derive(Debug, Error)]
-pub enum PathUtilsError {
-    #[error("Dirs Error: {0}")]
-    DirectoriesError(&'static str),
-}
-
-type Result<T> = std::result::Result<T, PathUtilsError>;
 
 pub fn project_dirs() -> Result<ProjectDirs> {
-    ProjectDirs::from("", "", "dotme").ok_or(PathUtilsError::DirectoriesError(
-        "Cannot get project directories",
-    ))
+    ProjectDirs::from("", "", "dotme").ok_or(anyhow!("cant find root config for dotme"))
 }
 
 pub fn base_dirs() -> Result<BaseDirs> {
-    BaseDirs::new().ok_or(PathUtilsError::DirectoriesError(
-        "Cannot get base directories",
-    ))
+    BaseDirs::new().ok_or(anyhow!("Cannot get base directories",))
 }
 
-pub struct RepoPathLocation {
-    is_absolute: bool,
-    path: PathBuf,
-}
-
-impl Display for RepoPathLocation {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self.is_absolute {
-            true => write!(f, "{}", self.path.display()),
-            false => write!(f, "$HOME/{}", self.path.display()),
-        }
-    }
-}
-
-impl Default for RepoPathLocation {
-    fn default() -> Self {
-        Self {
-            is_absolute: false,
-            path: PathBuf::from(".cfg"),
-        }
-    }
+/// This function does a thing
+pub fn parse_into_absolute(path: &Path) -> PathBuf {
+    path.strip_prefix("$HOME")
+        .ok()
+        .and_then(|rest| {
+            let home = BaseDirs::new().map(|x| x.home_dir().to_path_buf());
+            home.map(|x| x.join(rest))
+        })
+        .unwrap_or(path.to_path_buf())
 }

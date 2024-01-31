@@ -1,15 +1,5 @@
+use anyhow::{anyhow, Result};
 use std::env;
-use thiserror::Error;
-
-#[derive(Debug, Error, PartialEq)]
-pub enum ShellError {
-    #[error("Can't find the users shell, might not be supported")]
-    CannotFindShell,
-    #[error("Unknown shell '{0}'")]
-    UnknownShell(String),
-}
-
-type Result<T> = std::result::Result<T, ShellError>;
 
 #[derive(Default, Debug, PartialEq)]
 pub struct ShellConfig {
@@ -29,7 +19,7 @@ impl ShellConfig {
                 return Ok(shell_config);
             }
         }
-        Err(ShellError::CannotFindShell)
+        Err(anyhow!("Cannot find shell"))
     }
 }
 
@@ -43,7 +33,7 @@ fn try_parse_shell(shell_path: &str) -> Result<ShellConfig> {
             });
         }
     }
-    Err(ShellError::UnknownShell(shell_path.to_owned()))
+    Err(anyhow!("cannot find shell '{}'", shell_path))
 }
 
 fn match_shell_to_config_file(shell: &str) -> Option<String> {
@@ -85,9 +75,9 @@ mod try_parse_shell_tests {
         assert_eq!(&shell.path, "/usr/bin/zsh");
     }
     #[test]
+    #[should_panic]
     fn it_shouldnt_load_unknown_shell() {
         let shell_path = String::from("/usr/bin/unknown");
-        let shell = try_parse_shell(&shell_path);
-        assert_eq!(shell, Err(ShellError::UnknownShell(shell_path)));
+        try_parse_shell(&shell_path).unwrap();
     }
 }

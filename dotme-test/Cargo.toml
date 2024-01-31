@@ -11,4 +11,4 @@ edition.workspace = true
 [dependencies]
 git2 = { workspace = true }
 directories = { workspace = true }
-thiserror = { workspace = true }
+anyhow = { workspace = true }

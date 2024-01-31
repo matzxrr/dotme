@@ -1,25 +1,8 @@
 use std::path::Path;
 
-use crate::path_utils::{self, PathUtilsError};
-use git2::Error as Git2Error;
+use crate::path_utils::{self};
+use anyhow::{anyhow, Result};
 use git2::{ErrorCode, Repository};
-use thiserror::Error;
-
-#[derive(Error, Debug)]
-pub enum RepoError {
-    #[error("repoistory config is invalid: {0}")]
-    InvalidRepoConfig(String),
-    #[error("git2: {0}")]
-    Git2Error(#[from] Git2Error),
-    #[error("unknown branch")]
-    UnknownBranch,
-    #[error("branch name is not valid utf-8")]
-    BranchNotUtf8,
-    #[error("path error: {0}")]
-    PathUtilError(#[from] PathUtilsError),
-}
-
-type Result<T> = std::result::Result<T, RepoError>;
 
 /// A struct that wraps `crate::config::Config` and `git2::Repository`
 /// making it easy to load the dotme repo.
@@ -34,9 +17,7 @@ pub struct Repo {
 impl Repo {
     pub fn validate_config(&self) -> Result<()> {
         if !self.repo.is_bare() {
-            Err(RepoError::InvalidRepoConfig(String::from(
-                "not a bare repo",
-            )))
+            Err(anyhow!("repo needs to be a bare repository"))
         } else {
             Ok(())
         }
@@ -50,9 +31,7 @@ impl Repo {
                 base_dirs.home_dir().to_path_buf()
             }
         };
-        self.repo
-            .set_workdir(&path, false)
-            .map_err(RepoError::Git2Error)
+        self.repo.set_workdir(&path, false).map_err(Into::into)
     }
 
     pub fn get_branch_name(&self) -> Result<String> {
@@ -61,13 +40,13 @@ impl Repo {
             Err(ref e)
                 if e.code() == ErrorCode::UnbornBranch || e.code() == ErrorCode::NotFound =>
             {
-                return Err(RepoError::UnknownBranch);
+                return Err(anyhow!("Unknown branch"));
             }
-            Err(e) => return Err(RepoError::Git2Error(e)),
+            Err(e) => return Err(Into::into(e)),
         };
         head.shorthand()
             .map(|x| x.to_owned())
-            .ok_or_else(|| RepoError::BranchNotUtf8)
+            .ok_or_else(|| anyhow!("Branch not utf8"))
     }
 
     pub fn create_bare_repo(path: &Path) -> Result<Repo> {
