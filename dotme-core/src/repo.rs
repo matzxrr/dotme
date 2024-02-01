@@ -1,8 +1,8 @@
-use std::path::Path;
+use std::{env, path::Path};
 
 use crate::path_utils::{self};
 use anyhow::{anyhow, Result};
-use git2::{ErrorCode, Repository};
+use git2::{Cred, ErrorCode, FetchOptions, RemoteCallbacks, Repository};
 
 /// A struct that wraps `crate::config::Config` and `git2::Repository`
 /// making it easy to load the dotme repo.
@@ -62,6 +62,28 @@ impl Repo {
         let mut config = self.repo.config()?;
         config.set_str("status.showuntrackedfiles", "no")?;
         Ok(())
+    }
+
+    pub fn clone(url: &str, destination: &Path) -> Result<Repo> {
+        let mut callbacks = RemoteCallbacks::new();
+        callbacks.credentials(|_url, username_from_url, _allowed_types| {
+            Cred::ssh_key(
+                username_from_url.unwrap(),
+                None,
+                Path::new(&format!("{}/.ssh/id_rsa", env::var("HOME").unwrap())),
+                None,
+            )
+        });
+
+        let mut fo = FetchOptions::new();
+        fo.remote_callbacks(callbacks);
+
+        let mut builder = git2::build::RepoBuilder::new();
+        builder.bare(true);
+        builder.fetch_options(fo);
+
+        let repo = builder.clone(url, destination)?;
+        Ok(Repo { repo })
     }
 }
 

@@ -5,8 +5,10 @@
 
 mod dotme_panic;
 
+use std::path::PathBuf;
+
 use clap::{Parser, Subcommand};
-use dotme_core::cmd::init;
+use dotme_core::cmd;
 
 #[derive(Debug, Parser)]
 #[command(name = "dotme")]
@@ -20,8 +22,11 @@ struct Cli {
 enum Commands {
     #[command(about = "Setup a new dotfile repo")]
     Init,
-    #[command(about = "Clone and install your dotfiles")]
-    Clone,
+    #[command(
+        about = "Clone and install your dotfiles",
+        arg_required_else_help = true
+    )]
+    Clone { remote: PathBuf },
     #[command(about = "Configure your existing repo")]
     Config,
     #[command(about = "Uninstall your dotfiles and restore previous files")]
@@ -33,14 +38,15 @@ fn main() {
     let args = Cli::parse();
     match args.command {
         Commands::Init => {
-            match init::init() {
+            match cmd::init() {
                 Ok(()) => println!("Init Complete!"),
                 Err(err) => println!("{}", err),
             };
         }
-        Commands::Clone => {
-            todo!()
-        }
+        Commands::Clone { remote } => match cmd::clone(&remote) {
+            Ok(()) => println!("Clone Complete!"),
+            Err(err) => println!("{}", err),
+        },
         Commands::Config => {
             todo!()
         }

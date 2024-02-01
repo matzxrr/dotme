@@ -11,7 +11,6 @@ pub fn base_dirs() -> Result<BaseDirs> {
     BaseDirs::new().ok_or(anyhow!("Cannot get base directories",))
 }
 
-/// This function does a thing
 pub fn parse_into_absolute(path: &Path) -> PathBuf {
     path.strip_prefix("$HOME")
         .ok()
@@ -20,4 +19,8 @@ pub fn parse_into_absolute(path: &Path) -> PathBuf {
             home.map(|x| x.join(rest))
         })
         .unwrap_or(path.to_path_buf())
+}
+
+pub fn is_ssh_path(path: &Path) -> bool {
+    !path.starts_with("http")
 }
