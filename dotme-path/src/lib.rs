@@ -1,14 +1,8 @@
-pub fn add(left: usize, right: usize) -> usize {
-    left + right
-}
+//! Path utilities for dotme
+//!
+//! Generally doesn't support Windows
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
-    }
-}
+/// Interpolate Env
+///
+/// Bash like interpolation of ENV variables in `Path` structs.
+pub mod interpolate_env;
