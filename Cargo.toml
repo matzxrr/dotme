@@ -3,7 +3,8 @@ resolver = "2"
 members = [
   "dotme-cli",
   "dotme-core",
-  "dotme-test"
+  "dotme-test",
+  "dotme-path"
 ]
 
 [workspace.package]

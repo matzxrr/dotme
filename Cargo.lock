@@ -203,6 +203,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "dotme-path"
+version = "0.1.0"
+
+[[package]]
 name = "dotme-test"
 version = "0.1.0"
 dependencies = [
