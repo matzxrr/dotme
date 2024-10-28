@@ -1,7 +1,7 @@
-use std::panic::{set_hook, PanicInfo};
+use std::panic::{set_hook, PanicHookInfo};
 
 pub fn setup() {
-    set_hook(Box::new(|info: &PanicInfo| {
+    set_hook(Box::new(|info: &PanicHookInfo| {
         let output = handle_dump(info);
         eprintln!("{}", output);
     }));
@@ -19,7 +19,7 @@ impl std::fmt::Display for DumpData {
     }
 }
 
-fn handle_dump(panic_info: &PanicInfo) -> DumpData {
+fn handle_dump(panic_info: &PanicHookInfo) -> DumpData {
     let mut origin = String::new();
     let message = match (
         panic_info.payload().downcast_ref::<&str>(),

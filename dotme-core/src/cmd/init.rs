@@ -56,7 +56,6 @@ pub fn add_config_cmd_to_shell_file(path: &Path) -> Result<()> {
     let shell_config_file = home.join(shell_config.file);
 
     let mut file = OpenOptions::new()
-        .write(true)
         .append(true)
         .open(shell_config_file)
         .unwrap();
