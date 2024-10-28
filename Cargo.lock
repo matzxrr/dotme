@@ -205,6 +205,9 @@ dependencies = [
 [[package]]
 name = "dotme-path"
 version = "0.1.0"
+dependencies = [
+ "memchr",
+]
 
 [[package]]
 name = "dotme-test"
